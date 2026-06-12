@@ -23,12 +23,12 @@ public class Player extends PlayerBase {
                 System.out.print(getName() + ", digite a coluna (0-9): ");
                 String columnStr = scanner.nextLine();
 
-                int line = Integer.parseInt(lineStr);
-                int column = Integer.parseInt(columnStr);
+                int row = Integer.parseInt(lineStr);
+                int col = Integer.parseInt(columnStr);
 
-                if (line >= 0 && line <= 9 && column >= 0 && column <= 9) {
-                    move[0] = line;
-                    move[1] = column;
+                if (row >= 0 && row <= 9 && col >= 0 && col <= 9) {
+                    move[0] = row;
+                    move[1] = col;
                     valid = true;
                 } else {
                     System.out.println("Valores fora do intervalo. Tente novamente.");

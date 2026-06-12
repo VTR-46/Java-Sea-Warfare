@@ -6,9 +6,9 @@ public class Coordinate {
     private int c;
     private boolean hit;
 
-    public Coordinate(int li, int co) {
-        this.l = li;
-        this.c = co;
+    public Coordinate(int row, int col) {
+        this.l = row;
+        this.c = col;
         this.hit = false;
     }
 

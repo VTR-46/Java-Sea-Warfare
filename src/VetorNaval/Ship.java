@@ -19,15 +19,15 @@ public class Ship {
         this.positions = new ArrayList<>();
     }
 
-    public void addPosition(int row, int cow) {
+    public void addPosition(int row, int col) {
         if (positions.size() < size) {
-            positions.add(new Coordinate(row, cow));
+            positions.add(new Coordinate(row, col));
         }
     }
 
-    public boolean registerHit(int row, int cow) {
+    public boolean registerHit(int row, int col) {
         for (Coordinate c : positions) {
-            if (c.getLine() == row && c.getColumn() == cow && !c.isHit()) {
+            if (c.getLine() == row && c.getColumn() == col && !c.isHit()) {
                 c.setHit(true);
                 hits++;
                 if (hits >= size) {
