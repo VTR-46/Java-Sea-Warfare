@@ -48,8 +48,8 @@ public class GameManager {
     
     private void placeShipsForPlayer(Player player) {
          
-        String[] shipNames = {"Porta-Aviões", "Contratorpedeiro", "Submarino"};
-        int[] shipSizes = {5, 3, 2};
+        String[] shipNames = {"Porta-Aviões", "Contratorpedeiro", "Submarino"};     // talvez adiconar mais
+        int[] shipSizes = {5, 3, 2};            //tamanho do navio
 
         for (int i = 0; i < shipNames.length; i++) {
             boolean placed = false;

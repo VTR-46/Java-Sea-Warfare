@@ -102,7 +102,7 @@ public abstract class PlayerBase {
         return ships;
     }
 
-    // mtodos  para aos objetos Map para renderização 
+    // metodos  para aos objetos Map para renderização 
     public void displayOwnBoard() {
         ownBoard.displayBoard(true);
     }

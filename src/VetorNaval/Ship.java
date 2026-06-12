@@ -19,7 +19,7 @@ public class Ship {
         this.positions = new ArrayList<>();
     }
 
-    public void addPosition(int row, int col) {
+    public void addPosition(int row, int col) {     //adicona 1 bloco da como parte do navio
         if (positions.size() < size) {
             positions.add(new Coordinate(row, col));
         }

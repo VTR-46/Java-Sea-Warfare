@@ -1,6 +1,6 @@
 package VetorNaval;
 
-public class Coordinate {
+public class Coordinate {           //cordenada da matriz (mapa)
 
     private int l;
     private int c;
