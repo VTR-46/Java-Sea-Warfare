@@ -58,7 +58,7 @@ public abstract class PlayerBase {
             ownBoard.setCellState(row, col, Map.ACERTO);
             shipPartsRemaining--;
             for (Ship s : ships) {
-                s.registrarAcerto(row, col);
+                s.registerHit(row, col);
             }
             return Map.ACERTO;
         } else {

@@ -76,9 +76,9 @@ public class GameManager {
                     // Preenche as coordenadas
                     for (int j = 0; j < shipSizes[i]; j++) {
                         if (guidance == Guidance.HORIZONTAL) {      //horinzonmtal
-                            newShip.adicionarPosicao(row, col + j);
+                            newShip.addPosition(row, col + j);
                         } else {                                    //vertical
-                            newShip.adicionarPosicao(row + j, col);
+                            newShip.addPosition(row + j, col);
                         }
                     }
 
