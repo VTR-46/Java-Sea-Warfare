@@ -1,5 +1,5 @@
 
-package VetorNaval;
+package JavaSeaWarfare;
 
 
 public class GUI extends javax.swing.JFrame {

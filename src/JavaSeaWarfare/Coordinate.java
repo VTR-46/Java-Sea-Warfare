@@ -1,4 +1,4 @@
-package VetorNaval;
+package JavaSeaWarfare;
 
 public class Coordinate {           //cordenada da matriz (mapa)
 

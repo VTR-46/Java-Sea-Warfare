@@ -1,4 +1,4 @@
-package VetorNaval;
+package JavaSeaWarfare;
 
 public class MainClient {
     public static void main(String[] args) {
