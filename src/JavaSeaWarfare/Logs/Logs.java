@@ -1,4 +1,4 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Logs;
 
 import java.io.*;
 import java.time.LocalDateTime;

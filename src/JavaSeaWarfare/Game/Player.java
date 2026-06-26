@@ -1,5 +1,6 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Game;
 
+import JavaSeaWarfare.Game.PlayerBase;
 import java.util.Scanner;
 
 public class Player extends PlayerBase {

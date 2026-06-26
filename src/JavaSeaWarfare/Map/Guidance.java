@@ -1,4 +1,4 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Map;
 
 public enum Guidance {
 

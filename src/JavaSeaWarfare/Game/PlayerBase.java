@@ -1,5 +1,6 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Game;
 
+import JavaSeaWarfare.Map.Map;
 import java.util.ArrayList;
 import java.util.List;
 

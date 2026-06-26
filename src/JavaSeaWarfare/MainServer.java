@@ -1,5 +1,7 @@
 package JavaSeaWarfare;
 
+import JavaSeaWarfare.GUI.Screen;
+import JavaSeaWarfare.Logs.Logs;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 

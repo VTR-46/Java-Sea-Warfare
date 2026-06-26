@@ -1,4 +1,4 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Game;
 
 import java.util.ArrayList;
 import java.util.List;

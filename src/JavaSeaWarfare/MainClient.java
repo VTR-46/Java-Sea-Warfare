@@ -1,5 +1,8 @@
 package JavaSeaWarfare;
 
+import JavaSeaWarfare.Game.GameManager;
+import JavaSeaWarfare.Game.Player;
+
 public class MainClient {
     public static void main(String[] args) {
 

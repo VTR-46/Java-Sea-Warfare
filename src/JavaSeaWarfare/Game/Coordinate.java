@@ -1,4 +1,4 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Game;
 
 public class Coordinate {           //cordenada da matriz (mapa)
 

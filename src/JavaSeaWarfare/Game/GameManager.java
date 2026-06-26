@@ -1,5 +1,9 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Game;
 
+import JavaSeaWarfare.Game.Player;
+import JavaSeaWarfare.Game.Ship;
+import JavaSeaWarfare.Map.Guidance;
+import JavaSeaWarfare.Map.Map;
 import java.util.Scanner;
 
 public class GameManager {

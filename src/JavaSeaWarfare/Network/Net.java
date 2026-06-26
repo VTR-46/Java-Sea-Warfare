@@ -1,5 +1,6 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.Network;
 
+import JavaSeaWarfare.GUI.Screen;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;

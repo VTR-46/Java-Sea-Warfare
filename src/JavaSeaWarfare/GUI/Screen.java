@@ -1,5 +1,10 @@
-package JavaSeaWarfare;
+package JavaSeaWarfare.GUI;
 
+import JavaSeaWarfare.Map.Map;
+import JavaSeaWarfare.Logs.Logs;
+import JavaSeaWarfare.Network.Net;
+import JavaSeaWarfare.Game.Player;
+import JavaSeaWarfare.Game.Ship;
 import javax.swing.*;
 import java.awt.*;
 
