@@ -14,11 +14,15 @@ public class Screen extends JFrame {
     private JButton[][] opponentButtons;
     private JButton[][] customButtons;
     private JLabel lblStatus;
-    private JButton btnOrientacao;
+    private JButton btnGuidance;
 
+    private JLabel lblMy;       
+    private JLabel lblOpponent;
+    
     private Player localPlayer;
+    private String opponentName = "Desconhecido";
     private Net net;
-    private boolean minhaVez;
+    private boolean MyTurn;
     
     // Controle da Fase de Posicionamento
     private boolean phasePositioning = true;
@@ -29,9 +33,9 @@ public class Screen extends JFrame {
     private String[] shipNames = {"Porta-Aviões", "Encouraçado", "Contratorpedeiro", "Submarino"};
     private int[] shipSize = {5, 4, 3, 2};
 
-    public Screen(String playerName, boolean hospedar, String ip) {
+    public Screen(String playerName, boolean host, String ip) {
         this.localPlayer = new Player(playerName);
-        this.minhaVez = hospedar; // servidor sempre atira primeiro depois do setup
+        this.MyTurn = host; // servidor sempre atira primeiro depois do setup
 
         // -----UI-----
         
@@ -52,9 +56,10 @@ public class Screen extends JFrame {
 
         // mapa do Jogador local - Esquerda
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JLabel("Sua Frota", SwingConstants.CENTER), BorderLayout.NORTH);
+        lblMy = new JLabel("Sua Frota (" + localPlayer.getName() + ")", SwingConstants.CENTER); // CORREÇÃO AQUI
+        leftPanel.add(lblMy, BorderLayout.NORTH);
         
-        JPanel gradePropria = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
+        JPanel ownGrid = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
         customButtons = new JButton[Map.TAMANHO][Map.TAMANHO];
         for (int i = 0; i < Map.TAMANHO; i++) {
             for (int j = 0; j < Map.TAMANHO; j++) {
@@ -66,23 +71,24 @@ public class Screen extends JFrame {
                 btn.addActionListener(e -> positionShip(l, c));
                 
                 customButtons[i][j] = btn;
-                gradePropria.add(btn);
+                ownGrid.add(btn);
             }
         }
-        leftPanel.add(gradePropria, BorderLayout.CENTER);
+        leftPanel.add(ownGrid, BorderLayout.CENTER);
 
         // para girar o navio de horizonta e vertical
-        btnOrientacao = new JButton("Orientação: HORIZONTAL");
-        btnOrientacao.setBackground(Color.YELLOW);
-        btnOrientacao.addActionListener(e -> {
+        btnGuidance = new JButton("Orientação: HORIZONTAL");
+        btnGuidance.setBackground(Color.YELLOW);
+        btnGuidance.addActionListener(e -> {
             horizontal = !horizontal;
-            btnOrientacao.setText("Orientação: " + (horizontal ? "HORIZONTAL" : "VERTICAL"));
+            btnGuidance.setText("Orientação: " + (horizontal ? "HORIZONTAL" : "VERTICAL"));
         });
-        leftPanel.add(btnOrientacao, BorderLayout.SOUTH);
+        leftPanel.add(btnGuidance, BorderLayout.SOUTH);
 
         // mapa do Oponente / Radar - Direita
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(new JLabel("Radar de Ataque", SwingConstants.CENTER), BorderLayout.NORTH);
+        lblOpponent = new JLabel("Radar de Ataque (Aguardando...)", SwingConstants.CENTER); // CORREÇÃO AQUI
+        rightPanel.add(lblOpponent, BorderLayout.NORTH);
         
         JPanel opponentGrid = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
         opponentButtons = new JButton[Map.TAMANHO][Map.TAMANHO];
@@ -107,7 +113,7 @@ public class Screen extends JFrame {
         add(centralPanel, BorderLayout.CENTER);
 
         // inicializa a conexão
-        this.net = new Net(this, hospedar, ip);
+        this.net = new Net(this, host, ip);
     }
 
     // ==========================================
@@ -146,7 +152,7 @@ public class Screen extends JFrame {
             // verificacao se  colocau todos os navios
             if (currentShip >= shipSize.length) {
                 phasePositioning = false;
-                btnOrientacao.setEnabled(false); // desativa o botão de girar 
+                btnGuidance.setEnabled(false); // desativa o botão de girar 
                 
                 // avisa o adversario pela rede que terminou de arrumar o mapa
                 net.sendMessage("PRONTO");
@@ -183,7 +189,7 @@ public class Screen extends JFrame {
     }
 
     private void updateShiftPanel() {
-        if (minhaVez) {
+        if (MyTurn) {
             lblStatus.setText("SUA VEZ! Ataque o radar inimigo.");
         } else {
             lblStatus.setText("TURNO INIMIGO... Aguarde o ataque.");
@@ -192,12 +198,12 @@ public class Screen extends JFrame {
 
     private void fireOpponent(int row, int col) {
         // trava os tiros se estiver na fase de colocar navios, se o oponente não estiver pronto ou se não for sua vez.
-        if (phasePositioning || !opponentReady || !minhaVez) return;
+        if (phasePositioning || !opponentReady || !MyTurn) return;
 
         JButton btn = opponentButtons[row][col];
         if (!btn.getText().equals("~")) return; // impede atirar onde já atirou
 
-        minhaVez = false;
+        MyTurn = false;
         updateShiftPanel();
         net.sendMessage("TIRO " + row + " " + col);
     }
@@ -206,6 +212,12 @@ public class Screen extends JFrame {
         String[] parts = msg.split(" ");
         String comand = parts[0];
 
+        if (comand.equals("NOME")) {
+            // O substring(5) pega todo o texto depois de "NOME " para suportar nomes com espaço
+            this.opponentName = msg.substring(5);
+            lblOpponent.setText("Radar de Ataque (" + this.opponentName + ")");
+        }
+        
         // sincronizador: oponente avisa que terminou de posicionar a frota dele
         if (comand.equals("PRONTO")) {
             opponentReady = true;
@@ -230,13 +242,13 @@ public class Screen extends JFrame {
             net.sendMessage("RESULTADO " + result + " " + l + " " + c);
 
             if (localPlayer.isDefeated()) {
-                Logs.saveVictory("Oponente", localPlayer.getName());
-                net.closeConection();
-                JOptionPane.showMessageDialog(this, "Fim de jogo! Sua frota foi destruída.");
+                Logs.saveVictory(opponentName, localPlayer.getName());
+                
+                JOptionPane.showMessageDialog(this, "💥 Fim de jogo! Sua frota foi destruída.");
                 System.exit(0);
             }
 
-            minhaVez = true;
+            MyTurn = true;
             updateShiftPanel();
 
         } 
@@ -258,5 +270,9 @@ public class Screen extends JFrame {
             
             updateShiftPanel();
         }
+    }
+
+    public Player getLocalPlayer() {
+        return localPlayer;
     }
 }

@@ -37,6 +37,8 @@ public class Net {
                 this.out = new PrintWriter(socket.getOutputStream(), true);
                 this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
+                sendMessage("NOME " + screen.getLocalPlayer().getName());
+                
                 // starta o loop de escuta de mensagens na rede
                 readsNet();
 
