@@ -11,12 +11,12 @@ import java.awt.*;
 public class Screen extends JFrame {
 
     // Interfaces Visuais               PTBR
-    private JButton[][] botoesAdversario;
-    private JButton[][] botoesProprios;
+    private JButton[][] opponentButtons;
+    private JButton[][] customButtons;
     private JLabel lblStatus;
     private JButton btnOrientacao;
 
-    private Player jogadorLocal;
+    private Player localPlayer;
     private Net net;
     private boolean minhaVez;
     
@@ -30,7 +30,7 @@ public class Screen extends JFrame {
     private int[] shipSize = {5, 4, 3, 2};
 
     public Screen(String playerName, boolean hospedar, String ip) {
-        this.jogadorLocal = new Player(playerName);
+        this.localPlayer = new Player(playerName);
         this.minhaVez = hospedar; // servidor sempre atira primeiro depois do setup
 
         // -----UI-----
@@ -47,15 +47,15 @@ public class Screen extends JFrame {
         add(lblStatus, BorderLayout.NORTH);
 
         // --- PAINEL CENTRAL (DOIS TABULEIROS LADO A LADO) ---
-        JPanel painelCentral = new JPanel(new GridLayout(1, 2, 20, 0));
-        painelCentral.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel centralPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        centralPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // mapa do Jogador local - Esquerda
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(new JLabel("Sua Frota", SwingConstants.CENTER), BorderLayout.NORTH);
         
         JPanel gradePropria = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
-        botoesProprios = new JButton[Map.TAMANHO][Map.TAMANHO];
+        customButtons = new JButton[Map.TAMANHO][Map.TAMANHO];
         for (int i = 0; i < Map.TAMANHO; i++) {
             for (int j = 0; j < Map.TAMANHO; j++) {
                 JButton btn = new JButton("~");
@@ -65,7 +65,7 @@ public class Screen extends JFrame {
                 // acao para posicionar navio ao clicar
                 btn.addActionListener(e -> positionShip(l, c));
                 
-                botoesProprios[i][j] = btn;
+                customButtons[i][j] = btn;
                 gradePropria.add(btn);
             }
         }
@@ -85,7 +85,7 @@ public class Screen extends JFrame {
         rightPanel.add(new JLabel("Radar de Ataque", SwingConstants.CENTER), BorderLayout.NORTH);
         
         JPanel opponentGrid = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
-        botoesAdversario = new JButton[Map.TAMANHO][Map.TAMANHO];
+        opponentButtons = new JButton[Map.TAMANHO][Map.TAMANHO];
         for (int i = 0; i < Map.TAMANHO; i++) {
             for (int j = 0; j < Map.TAMANHO; j++) {
                 JButton btn = new JButton("~");
@@ -95,16 +95,16 @@ public class Screen extends JFrame {
                 // acao para atirar no inimigo
                 btn.addActionListener(e -> fireOpponent(l, c));
                 
-                botoesAdversario[i][j] = btn;
+                opponentButtons[i][j] = btn;
                 opponentGrid.add(btn);
             }
         }
         rightPanel.add(opponentGrid, BorderLayout.CENTER);
 
         // add os dois tabuleiros à tela
-        painelCentral.add(leftPanel);
-        painelCentral.add(rightPanel);
-        add(painelCentral, BorderLayout.CENTER);
+        centralPanel.add(leftPanel);
+        centralPanel.add(rightPanel);
+        add(centralPanel, BorderLayout.CENTER);
 
         // inicializa a conexão
         this.net = new Net(this, hospedar, ip);
@@ -136,11 +136,11 @@ public class Screen extends JFrame {
                 int c = col + (horizontal ? j : 0);
                 
                 s.addPosition(l, c);
-                botoesProprios[l][c].setBackground(Color.DARK_GRAY); // Pinta de cinza para o jogador ver
-                botoesProprios[l][c].setEnabled(false); // Desativa para não clicar de novo por cima
+                customButtons[l][c].setBackground(Color.DARK_GRAY); // Pinta de cinza para o jogador ver
+                customButtons[l][c].setEnabled(false); // Desativa para não clicar de novo por cima
             }
 
-            jogadorLocal.addShip(s);
+            localPlayer.addShip(s);
             currentShip++;
 
             // verificacao se  colocau todos os navios
@@ -165,7 +165,7 @@ public class Screen extends JFrame {
             int c = initialCol + (horizontal ? i : 0);
 
             if (l >= Map.TAMANHO || c >= Map.TAMANHO) return false; // saiu do mapa
-            if (jogadorLocal.getOwnCellState(l, c) == Map.NAVIO) return false; // bateu em navio
+            if (localPlayer.getOwnCellState(l, c) == Map.NAVIO) return false; // bateu em navio
         }
         return true;
     }
@@ -194,7 +194,7 @@ public class Screen extends JFrame {
         // trava os tiros se estiver na fase de colocar navios, se o oponente não estiver pronto ou se não for sua vez.
         if (phasePositioning || !opponentReady || !minhaVez) return;
 
-        JButton btn = botoesAdversario[row][col];
+        JButton btn = opponentButtons[row][col];
         if (!btn.getText().equals("~")) return; // impede atirar onde já atirou
 
         minhaVez = false;
@@ -216,21 +216,21 @@ public class Screen extends JFrame {
             int l = Integer.parseInt(parts[1]);
             int c = Integer.parseInt(parts[2]);
 
-            int result = jogadorLocal.receiveAttack(l, c);
+            int result = localPlayer.receiveAttack(l, c);
 
             // ATUALIZAÇÃO VISUAL NO MAPA para ver onde o tiro pegou
             if (result == Map.ACERTO) {
-                botoesProprios[l][c].setBackground(Color.RED);
-                botoesProprios[l][c].setText("X");
+                customButtons[l][c].setBackground(Color.RED);
+                customButtons[l][c].setText("X");
             } else {
-                botoesProprios[l][c].setBackground(Color.BLUE);
-                botoesProprios[l][c].setText("*");
+                customButtons[l][c].setBackground(Color.BLUE);
+                customButtons[l][c].setText("*");
             }
 
             net.sendMessage("RESULTADO " + result + " " + l + " " + c);
 
-            if (jogadorLocal.isDefeated()) {
-                Logs.saveVictory("Oponente", jogadorLocal.getName());
+            if (localPlayer.isDefeated()) {
+                Logs.saveVictory("Oponente", localPlayer.getName());
                 net.closeConection();
                 JOptionPane.showMessageDialog(this, "Fim de jogo! Sua frota foi destruída.");
                 System.exit(0);
@@ -246,7 +246,7 @@ public class Screen extends JFrame {
             int l = Integer.parseInt(parts[2]);
             int c = Integer.parseInt(parts[3]);
 
-            JButton btn = botoesAdversario[l][c];
+            JButton btn = opponentButtons[l][c];
 
             if (result == Map.ACERTO) {
                 btn.setText("X");
