@@ -3,3 +3,5 @@
 [26/06/2026 20:07] Vencedor: Oponente | Derrotado: Jogador Cliente
 [26/06/2026 22:15] Vencedor: CORSA | Derrotado: VICTOR
 [01/07/2026 01:52] Vencedor: VTR | Derrotado: CORSA
+[02/07/2026 01:41] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 01:48] Vencedor: Almirante | Derrotado: Almirante

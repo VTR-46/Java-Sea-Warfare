@@ -5,6 +5,7 @@ import JavaSeaWarfare.Logs.Logs;
 import JavaSeaWarfare.Network.Net;
 import JavaSeaWarfare.Game.Player;
 import JavaSeaWarfare.Game.Ship;
+import JavaSeaWarfare.Sounds.Sounds;
 import javax.swing.*;
 import java.awt.*;
 
@@ -23,13 +24,14 @@ public class Screen extends JFrame {
     private String opponentName = "Desconhecido";
     private Net net;
     private boolean MyTurn;
+    private Sounds sons;
 
     // Controle da Fase de Posicionamento
     private boolean phasePositioning = true;
     private boolean opponentReady = false;
     private boolean horizontal = true; // é quem controla se o navio deita ou fica em pé na hora do posicionamento
     private int currentShip = 0;
-
+    
     private String[] shipNames = {"Porta-Aviões", "Encouraçado", "Contratorpedeiro", "Submarino"};
     private int[] shipSize = {5, 4, 3, 2};
 
@@ -111,8 +113,11 @@ public class Screen extends JFrame {
         centralPanel.add(rightPanel);
         add(centralPanel, BorderLayout.CENTER);
 
-        // inicializa a conexão
+        // inicializa a conexão e o sons do jogo
         this.net = new Net(this, host, ip);
+        this.sons = new Sounds();
+        
+        sons.playBGM();
     }
 
     // ==========================================
@@ -183,7 +188,7 @@ public class Screen extends JFrame {
     // LOGICA DE TURNOS E REDE
     // ===========================
     private void checkStartGame() {
-        if (!phasePositioning && opponentReady) {
+        if (!phasePositioning && opponentReady) {  
             updateShiftPanel();
         } else if (!phasePositioning) {
             lblStatus.setText("Frota pronta! Aguardando oponente posicionar a dele...");
@@ -236,11 +241,13 @@ public class Screen extends JFrame {
 
             // ATUALIZAÇÃO VISUAL NO MAPA para ver onde o tiro pegou
             if (result == Map.ACERTO) {
+                sons.playMyShipHit();
                 customButtons[l][c].setBackground(Color.RED);
                 customButtons[l][c].setText("X");
             } else {
                 customButtons[l][c].setBackground(Color.BLUE);
                 customButtons[l][c].setText("*");
+                sons.playMiss();
             }
 
             net.sendMessage("RESULTADO " + result + " " + l + " " + c);
@@ -249,7 +256,7 @@ public class Screen extends JFrame {
                 Logs.saveVictory(opponentName, localPlayer.getName());
 
                 net.sendMessage("VITORIA");
-
+                    
                 JOptionPane.showMessageDialog(this, "💥 Fim de jogo! Sua frota foi destruída.");
                 System.exit(0);
             }
@@ -266,17 +273,20 @@ public class Screen extends JFrame {
             JButton btn = opponentButtons[l][c];
 
             if (result == Map.ACERTO) {
+                sons.playOponentShipHit();
                 btn.setText("X");
                 btn.setBackground(Color.RED);
             } else {
                 btn.setText("*");
                 btn.setBackground(Color.BLUE);
+                sons.playMiss();
             }
             
             updateShiftPanel();
         }
         // Condicao para exibir a mensagem de vitória
         else if (comand.equals("VITORIA")) {
+            sons.playWin();
             JOptionPane.showMessageDialog(this, "🏆 PARABÉNS! Você destruiu toda a frota de " + opponentName + " e VENCEU a batalha!");
             net.closeConection();
             System.exit(0);
