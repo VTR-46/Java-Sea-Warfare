@@ -6,12 +6,13 @@ import JavaSeaWarfare.Network.Net;
 import JavaSeaWarfare.Game.Player;
 import JavaSeaWarfare.Game.Ship;
 import JavaSeaWarfare.Sounds.Sounds;
+import JavaSeaWarfare.GUI.Menu;
 import javax.swing.*;
 import java.awt.*;
 
 public class Screen extends JFrame {
 
-    // Interfaces Visuais               PTBR
+    // Interfaces Visuais
     private JButton[][] opponentButtons;
     private JButton[][] customButtons;
     private JLabel lblStatus;
@@ -23,25 +24,31 @@ public class Screen extends JFrame {
     private Player localPlayer;
     private String opponentName = "Desconhecido";
     private Net net;
-    private boolean MyTurn;
     private Sounds sons;
+
+    // Controle de Turno e Reinício
+    private boolean isHost; // Lembra quem é o servidor para reiniciar corretamente
+    private boolean MyTurn;
+    private boolean wantsToRestart = false;
+    private boolean opponentWantsToRestart = false;
 
     // Controle da Fase de Posicionamento
     private boolean phasePositioning = true;
     private boolean opponentReady = false;
-    private boolean horizontal = true; // é quem controla se o navio deita ou fica em pé na hora do posicionamento
+    private boolean horizontal = true;
     private int currentShip = 0;
-    
+
     private String[] shipNames = {"Porta-Aviões", "Encouraçado", "Contratorpedeiro", "Submarino"};
     private int[] shipSize = {5, 4, 3, 2};
 
     public Screen(String playerName, boolean host, String ip) {
         this.localPlayer = new Player(playerName);
-        this.MyTurn = host; // servidor sempre atira primeiro depois do setup
+        this.isHost = host;
+        this.MyTurn = host;
 
         // -----UI-----
         setTitle("Batalha Naval - " + playerName);
-        setSize(900, 500); //tamanho da jadenla
+        setSize(900, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -51,13 +58,13 @@ public class Screen extends JFrame {
         lblStatus.setFont(new Font("Arial", Font.BOLD, 16));
         add(lblStatus, BorderLayout.NORTH);
 
-        // --- PAINEL CENTRAL (DOIS TABULEIROS LADO A LADO) ---
+        // --- PAINEL CENTRAL ---
         JPanel centralPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         centralPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // mapa do Jogador local - Esquerda
+        // Esquerda (Sua Frota)
         JPanel leftPanel = new JPanel(new BorderLayout());
-        lblMy = new JLabel("Sua Frota (" + localPlayer.getName() + ")", SwingConstants.CENTER); // CORREÇÃO AQUI
+        lblMy = new JLabel("Sua Frota (" + localPlayer.getName() + ")", SwingConstants.CENTER);
         leftPanel.add(lblMy, BorderLayout.NORTH);
 
         JPanel ownGrid = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
@@ -67,17 +74,13 @@ public class Screen extends JFrame {
                 JButton btn = new JButton("~");
                 btn.setBackground(Color.CYAN);
                 final int l = i, c = j;
-
-                // acao para posicionar navio ao clicar
                 btn.addActionListener(e -> positionShip(l, c));
-
                 customButtons[i][j] = btn;
                 ownGrid.add(btn);
             }
         }
         leftPanel.add(ownGrid, BorderLayout.CENTER);
 
-        // para girar o navio de horizonta e vertical
         btnGuidance = new JButton("Orientação: HORIZONTAL");
         btnGuidance.setBackground(Color.YELLOW);
         btnGuidance.addActionListener(e -> {
@@ -86,9 +89,9 @@ public class Screen extends JFrame {
         });
         leftPanel.add(btnGuidance, BorderLayout.SOUTH);
 
-        // mapa do Oponente / Radar - Direita
+        // Direita (Radar Inimigo)
         JPanel rightPanel = new JPanel(new BorderLayout());
-        lblOpponent = new JLabel("Radar de Ataque (Aguardando...)", SwingConstants.CENTER); // CORREÇÃO AQUI
+        lblOpponent = new JLabel("Radar de Ataque (Aguardando...)", SwingConstants.CENTER);
         rightPanel.add(lblOpponent, BorderLayout.NORTH);
 
         JPanel opponentGrid = new JPanel(new GridLayout(Map.TAMANHO, Map.TAMANHO));
@@ -98,25 +101,21 @@ public class Screen extends JFrame {
                 JButton btn = new JButton("~");
                 btn.setBackground(Color.CYAN);
                 final int l = i, c = j;
-
-                // acao para atirar no inimigo
                 btn.addActionListener(e -> fireOpponent(l, c));
-
                 opponentButtons[i][j] = btn;
                 opponentGrid.add(btn);
             }
         }
         rightPanel.add(opponentGrid, BorderLayout.CENTER);
 
-        // add os dois tabuleiros à tela
         centralPanel.add(leftPanel);
         centralPanel.add(rightPanel);
         add(centralPanel, BorderLayout.CENTER);
 
-        // inicializa a conexão e o sons do jogo
+        // Inicializa a conexão e os sons
         this.net = new Net(this, host, ip);
         this.sons = new Sounds();
-        
+
         sons.playBGM();
     }
 
@@ -133,36 +132,33 @@ public class Screen extends JFrame {
 
     private void positionShip(int row, int col) {
         if (!phasePositioning) {
-            return; // Se já colocou tudo, ignora cliques aqui
+            return;
         }
+
         int size = shipSize[currentShip];
 
         if (canPosition(row, col, size, horizontal)) {
             Ship s = new Ship(shipNames[currentShip], size);
 
-            // Preenche o navio visualmente e na memria
             for (int j = 0; j < size; j++) {
                 int l = row + (horizontal ? 0 : j);
                 int c = col + (horizontal ? j : 0);
 
                 s.addPosition(l, c);
-                customButtons[l][c].setBackground(Color.DARK_GRAY); // Pinta de cinza para o jogador ver
-                customButtons[l][c].setEnabled(false); // Desativa para não clicar de novo por cima
+                customButtons[l][c].setBackground(Color.DARK_GRAY);
+                customButtons[l][c].setEnabled(false);
             }
 
             localPlayer.addShip(s);
             currentShip++;
 
-            // verificacao se  colocau todos os navios
             if (currentShip >= shipSize.length) {
                 phasePositioning = false;
-                btnGuidance.setEnabled(false); // desativa o botão de girar 
-
-                // avisa o adversario pela rede que terminou de arrumar o mapa
+                btnGuidance.setEnabled(false);
                 net.sendMessage("PRONTO");
                 checkStartGame();
             } else {
-                updateStatus("Fase de Preparação"); // atualiza o nome do prox navio
+                updateStatus("Fase de Preparação");
             }
         } else {
             JOptionPane.showMessageDialog(this, "Posição inválida! O navio sai do mapa ou bate em outro.");
@@ -175,10 +171,10 @@ public class Screen extends JFrame {
             int c = initialCol + (horizontal ? i : 0);
 
             if (l >= Map.TAMANHO || c >= Map.TAMANHO) {
-                return false; // saiu do mapa
+                return false;
             }
             if (localPlayer.getOwnCellState(l, c) == Map.NAVIO) {
-                return false; // bateu em navio
+                return false;
             }
         }
         return true;
@@ -188,7 +184,7 @@ public class Screen extends JFrame {
     // LOGICA DE TURNOS E REDE
     // ===========================
     private void checkStartGame() {
-        if (!phasePositioning && opponentReady) {  
+        if (!phasePositioning && opponentReady) {
             updateShiftPanel();
         } else if (!phasePositioning) {
             lblStatus.setText("Frota pronta! Aguardando oponente posicionar a dele...");
@@ -204,15 +200,15 @@ public class Screen extends JFrame {
     }
 
     private void fireOpponent(int row, int col) {
-        // trava os tiros se estiver na fase de colocar navios, se o oponente não estiver pronto ou se não for sua vez.
         if (phasePositioning || !opponentReady || !MyTurn) {
             return;
         }
 
         JButton btn = opponentButtons[row][col];
         if (!btn.getText().equals("~")) {
-            return; // impede atirar onde já atirou
+            return;
         }
+
         MyTurn = false;
         updateShiftPanel();
         net.sendMessage("TIRO " + row + " " + col);
@@ -223,23 +219,17 @@ public class Screen extends JFrame {
         String comand = parts[0];
 
         if (comand.equals("NOME")) {
-            // O substring(5) pega todo o texto depois de "NOME " para suportar nomes com espaço
             this.opponentName = msg.substring(5);
             lblOpponent.setText("Radar de Ataque (" + this.opponentName + ")");
-        }
-
-        // sincronizador: oponente avisa que terminou de posicionar a frota dele
-        if (comand.equals("PRONTO")) {
+        } else if (comand.equals("PRONTO")) {
             opponentReady = true;
             checkStartGame();
-        } // o oponente atacou
-        else if (comand.equals("TIRO")) {
+        } else if (comand.equals("TIRO")) {
             int l = Integer.parseInt(parts[1]);
             int c = Integer.parseInt(parts[2]);
 
             int result = localPlayer.receiveAttack(l, c);
 
-            // ATUALIZAÇÃO VISUAL NO MAPA para ver onde o tiro pegou
             if (result == Map.ACERTO) {
                 sons.playMyShipHit();
                 customButtons[l][c].setBackground(Color.RED);
@@ -252,20 +242,20 @@ public class Screen extends JFrame {
 
             net.sendMessage("RESULTADO " + result + " " + l + " " + c);
 
+            // VERIFICAÇÃO DE DERROTA
             if (localPlayer.isDefeated()) {
                 Logs.saveVictory(opponentName, localPlayer.getName());
-
                 net.sendMessage("VITORIA");
-                    
-                JOptionPane.showMessageDialog(this, "💥 Fim de jogo! Sua frota foi destruída.");
-                System.exit(0);
+                
+                sons.stopBGM();
+                // Chama a nova função passando o texto da derrota
+                promptRestart("💥 Fim de jogo! Sua frota foi destruída."); 
+            } else {
+                MyTurn = true;
+                updateShiftPanel();
             }
 
-            MyTurn = true;
-            updateShiftPanel();
-
-        } // resposta se acerta ou erra o tiro no radar
-        else if (comand.equals("RESULTADO")) {
+        } else if (comand.equals("RESULTADO")) {
             int result = Integer.parseInt(parts[1]);
             int l = Integer.parseInt(parts[2]);
             int c = Integer.parseInt(parts[3]);
@@ -277,20 +267,101 @@ public class Screen extends JFrame {
                 btn.setText("X");
                 btn.setBackground(Color.RED);
             } else {
+                sons.playMiss();
                 btn.setText("*");
                 btn.setBackground(Color.BLUE);
-                sons.playMiss();
             }
-            
+
             updateShiftPanel();
-        }
-        // Condicao para exibir a mensagem de vitória
+        } // VERIFICAÇÃO DE VITÓRIA
         else if (comand.equals("VITORIA")) {
-            sons.playWin();
-            JOptionPane.showMessageDialog(this, "🏆 PARABÉNS! Você destruiu toda a frota de " + opponentName + " e VENCEU a batalha!");
+            sons.stopBGM();
+            // Chama a nova função passando o texto da vitória
+            promptRestart("🏆 PARABÉNS! Você destruiu toda a frota de " + opponentName + " e VENCEU a batalha!"); 
+        }
+        // ==========================================
+        // TRATAMENTO DA DECISÃO DE REINÍCIO
+        // ==========================================
+        else if (comand.equals("AGAIN")) {
+            if (parts[1].equals("YES")) {
+                opponentWantsToRestart = true;
+                checkRestartSync();
+            } else {
+                JOptionPane.showMessageDialog(this, opponentName + " decidiu sair da partida. O jogo será encerrado.");
+                
+                net.closeConection();
+                System.exit(0);
+            }
+        }
+    }
+
+    // ==========================================
+    // SISTEMA DE REINÍCIO (SEM FECHAR O JOGO)
+    // ==========================================
+    
+    // pergunta ao jogador local
+    private void promptRestart(String mensagemFinal) {
+        
+        int option = JOptionPane.showConfirmDialog(this, 
+                mensagemFinal + "\n\nDeseja jogar uma nova partida contra " + opponentName + "?", 
+                "Fim de Partida", 
+                JOptionPane.YES_NO_OPTION);
+
+        if (option == JOptionPane.YES_OPTION) {
+            wantsToRestart = true;
+            net.sendMessage("AGAIN YES");
+            checkRestartSync();
+        } else {
+            net.sendMessage("AGAIN NO");
+            
+            // 400 milissegundos para garantir que a mensagem viaja pela internet antes do jogo se "suicidar"
+            try { Thread.sleep(400); } catch (Exception e) {} 
+            
             net.closeConection();
             System.exit(0);
         }
+    }
+
+    // verifica se os dois concordaram
+    private void checkRestartSync() {
+        if (wantsToRestart && opponentWantsToRestart) {
+            resetGame();
+        } else if (wantsToRestart && !opponentWantsToRestart) {
+            lblStatus.setText("Aguardando " + opponentName + " decidir...");
+        }
+    }
+
+    // limpa o tabuleiro e recomeça a partida do zero
+    private void resetGame() {
+        
+        localPlayer.resetBoardsAndShips();
+
+        
+        phasePositioning = true;
+        opponentReady = false;
+        horizontal = true;
+        currentShip = 0;
+        MyTurn = isHost; 
+        wantsToRestart = false;
+        opponentWantsToRestart = false;
+
+        
+        for (int i = 0; i < Map.TAMANHO; i++) {
+            for (int j = 0; j < Map.TAMANHO; j++) {
+                customButtons[i][j].setText("~");
+                customButtons[i][j].setBackground(Color.CYAN);
+                customButtons[i][j].setEnabled(true);
+
+                opponentButtons[i][j].setText("~");
+                opponentButtons[i][j].setBackground(Color.CYAN);
+                opponentButtons[i][j].setEnabled(true);
+            }
+        }
+
+        btnGuidance.setEnabled(true);
+        btnGuidance.setText("Orientação: HORIZONTAL");
+
+        updateStatus("Fase de Preparação");
     }
 
     public Player getLocalPlayer() {

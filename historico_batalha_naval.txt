@@ -5,3 +5,14 @@
 [01/07/2026 01:52] Vencedor: VTR | Derrotado: CORSA
 [02/07/2026 01:41] Vencedor: Almirante | Derrotado: Almirante
 [02/07/2026 01:48] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 01:59] Vencedor: Almirante | Derrotado: VT
+[02/07/2026 02:07] Vencedor: VT | Derrotado: Almirante
+[02/07/2026 02:08] Vencedor: VT | Derrotado: Almirante
+[02/07/2026 02:10] Vencedor: Almirante | Derrotado: AlmirantevVT
+[02/07/2026 02:18] Vencedor: VTR | Derrotado: AlmiranteA
+[02/07/2026 02:19] Vencedor: AlmiranteA | Derrotado: VTR
+[02/07/2026 02:29] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 02:34] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 02:41] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 02:43] Vencedor: Almirante | Derrotado: Almirante
+[02/07/2026 02:44] Vencedor: Almirante | Derrotado: Almirante

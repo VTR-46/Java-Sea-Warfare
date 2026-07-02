@@ -79,12 +79,10 @@ public abstract class PlayerBase {
     public void resetBoardsAndShips() {
         ownBoard.reset();
         opponentBoard.reset();
+
+        ships.clear(); 
+
         shipPartsRemaining = 0;
-        for (Ship s : ships) {
-            s.reset();
-            shipPartsRemaining += s.getSize();
-            placeShipOnOwnBoard(s);
-        }
     }
 
     public int getShipPartsRemaining() {
